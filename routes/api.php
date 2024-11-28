@@ -11,6 +11,6 @@ use App\Http\Controllers\Api\UserController;
 
     Route::get('users', [UserController::class, 'index']);
     Route::post('users', [UserController::class, 'store']);
-    Route::get('user/{id}', [UserController::class, 'show']);
+    Route::get('users/{id}', [UserController::class, 'show']);
     Route::post('users/{id}', [UserController::class, 'update']);
-    Route::delete('user/{user}', [UserController::class, 'destroy']);
+    Route::delete('users/{id}', [UserController::class, 'destroy']);

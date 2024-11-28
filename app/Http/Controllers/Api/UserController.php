@@ -15,12 +15,41 @@ class UserController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $users = User::with('role')->get();
+            /* $page = $request['page'] ?? 1; 
+            $perPage = 10;
+            $users = User::with('role')->orderBy('updated_at', 'desc')->paginate($perPage); */
+            $page = $request->page ?? 1; 
+            $perPage = 10;
+            $search = $request->search ?? null;
+            \Log::info([
+                'page ' => $page,
+                'perPage ' => $perPage,
+                'search' => $search,
+                'request ' => $request->all()
+            ]);
+            $query = User::with('role')->orderBy('updated_at', 'desc');
+
+            if ($search) {
+                $query->where(function ($query) use ($search) {
+                    $query->where('name', 'like', '%' . $search . '%')
+                        ->orWhere('email', 'like', '%' . $search . '%')
+                        ->orWhereHas('role', function ($query) use ($search) {
+                            $query->where('name', 'like', '%' . $search . '%');
+                        });
+                });
+            }
+
+            $users = $query->paginate($perPage);
             return response()->json([
                 'status' => true, 'status_code' => 200, 'message' => 'Users retrieved successfully', 'data' => UserResource::collection($users),
+                'pagination' => [
+                    'current_page' => $users->currentPage(),
+                    'total_pages' => $users->lastPage(),
+                    'total_items' => $users->total(),
+                ]
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
